@@ -1,0 +1,130 @@
+
+[root@node245 ~]# cat /etc/redhat-release 
+CentOS Linux release 7.4.1708 (Core) 
+
+[root@node245 ~]# yum install epel-release
+[root@node245 ~]# yum install git vim wget patch
+
+[root@node245 ~]# git clone https://github.com/xanpeng/libcrush.git
+
+[root@node245 ~]# yum install autoconf automake boost-devel bzip2-devel cryptopp-devel expat-devel fcgi-devel fuse-devel gcc gcc-c++ gperftools-devel keyutils-libs-devel leveldb-devel libaio-devel libatomic_ops-devel libblkid-devel libbz2-devel libcurl-devel libedit-devel libtool libuuid-devel make nss-devel python-argparse python-flask python-nose snappy-devel systemd-devel xfsprogs-devel
+
+
+[root@node245 ~]# wget http://download.ceph.com/tarballs/ceph-0.68.tar.gz
+[root@node245 ~]# tar zxvf ceph-0.68.tar.gz
+[root@node245 ~]# cd ceph-0.68
+[root@node245 ceph-0.68]# patch -t -b -p1 -i /root/libcrush/libcrush-based-on-ceph0.86.diff 
+patching file src/crush/CrushWrapper.h
+patching file src/include/rados/librados.hpp
+patching file src/librados/RadosClient.h
+patching file src/librados/librados.cc
+patching file src/osd/OSDMap.h
+
+
+[root@node245 ceph-0.68]# ./autogen.sh
+[root@node245 ceph-0.68]# ./configure
+[root@node245 ceph-0.68]# make -j8
+
+[root@node245 src]# MON=3 OSD=9 ./vstart.sh -n mon osd -d
+[root@node245 src]# mkdir /etc/ceph
+[root@node245 src]# ln -s /root/ceph-0.86/src/ceph.conf /etc/ceph/
+[root@node245 src]# vim /root/.bash_profile 
+[root@node245 src]# cat /root/.bash_profile 
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+    . ~/.bashrc
+fi
+
+# User specific environment and startup programs
+
+PATH=/root/ceph-0.86/src/:$PATH:$HOME/bin
+
+export PATH
+[root@node245 src]# . /root/.bash_profile 
+[root@node245 src]# ceph -s
+*** DEVELOPER MODE: setting PATH, PYTHONPATH and LD_LIBRARY_PATH ***
+    cluster 2c37e36d-03ea-4d1c-ae36-014bbbd2e508
+     health HEALTH_WARN too few pgs per osd (0 < min 10)
+     monmap e1: 3 mons at {a=192.168.1.245:6789/0,b=192.168.1.245:6790/0,c=192.168.1.245:6791/0}, election epoch 6, quorum 0,1,2 a,b,c
+     osdmap e21: 9 osds: 9 up, 9 in
+      pgmap v34: 8 pgs, 1 pools, 0 bytes data, 0 objects
+            99445 MB used, 577 GB / 674 GB avail
+                   8 active+clean
+
+
+[root@node245 libcrush]# cp *.c *.cc *.h /root/ceph-0.86/src/
+[root@node245 src]# mv libcrush.h crush/
+[root@node245 src]# g++ client.cc  example-simple.cc -o example-simple -lcrush -lrados --std=c++11 -g -O0 -I. -I /root/ceph-0.86/src/include/ -L /root/ceph-0.86/src/.libs/ -Wl,-rpath,/root/ceph-0.86/src/.libs/
+[root@node245 src]# g++ client.cc  example-crush-tester.cc -o example-crush-tester -lcrush -lrados --std=c++11 -g -O0 -I. -I /root/ceph-0.86/src/include/ -L /root/ceph-0.86/src/.libs/ -Wl,-rpath,/root/ceph-0.86/src/.libs/
+
+
+[root@node245 libcrush]# g++ client.cc  example-simple.cc -o example-simple -lcrush -lrados --std=c++11 -g -O0 -I. -I /root/ceph-0.86/src/include/ -L /root/ceph-0.86/src/.libs/ -Wl,-rpath,/root/ceph-0.86/src/.libs/
+[root@node245 libcrush]# g++ client.cc  example-crush-tester.cc -o example-crush-tester -lcrush -lrados --std=c++11 -g -O0 -I. -I /root/ceph-0.86/src/include/ -L /root/ceph-0.86/src/.libs/ -Wl,-rpath,/root/ceph-0.86/src/.libs/
+
+[root@node245 libcrush]# ./example-simple 
+rule id: 0
+[root@node245 libcrush]# ./example-crush-tester test-object
+objectr_to_pg: test-object -> bf8f6aea
+raw_pg_to_pg: 6a
+pg_to_osds:
+  osd_weight: 65536,65536,65536,65536,65536,65536,65536,65536,65536,
+  ruleno: 0
+  placement_ps: -444548755
+
+---start crush_do_rule---
+---finish crush_do_rule---
+
+  numrep: 2, raw_osds: [8,4,]
+
+[root@node245 libcrush]# ./example-simple 
+rule id: 0
+[root@node245 libcrush]# ./example-crush-tester test-object
+objectr_to_pg: test-object -> bf8f6aea
+raw_pg_to_pg: 6a
+pg_to_osds:
+  osd_weight: 65536,65536,65536,65536,65536,65536,65536,65536,65536,
+  ruleno: 0
+  placement_ps: -444548755
+
+---start crush_do_rule---
+---finish crush_do_rule---
+
+  numrep: 2, raw_osds: [8,4,]
+
+
+[root@node243 build]# ./example-crush-tester  test-object
+objectr_to_pg: test-object -> bf8f6aea
+raw_pg_to_pg: 6a
+pg_to_osds:
+  osd_weight: 65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,
+  ruleno: 0
+  placement_ps: -444548755
+
+---start crush_do_rule---
+CHOOSE bucket -1 x -444548755 outpos 0 numrep 2 tries 51 recurse_tries 1 local_retries 0 local_fallback_retries 0 parent_r 0
+ crush_bucket_choose -1 x=-444548755 r=0
+  item -2 type 1
+ crush_bucket_choose -2 x=-444548755 r=0
+  item 13 type 0
+CHOOSE got 13
+ crush_bucket_choose -1 x=-444548755 r=1
+  item -2 type 1
+ crush_bucket_choose -2 x=-444548755 r=1
+  item 13 type 0
+  reject 0  collide 1  ftotal 1  flocal 1
+ crush_bucket_choose -1 x=-444548755 r=2
+  item -2 type 1
+ crush_bucket_choose -2 x=-444548755 r=2
+  item 13 type 0
+  reject 0  collide 1  ftotal 2  flocal 1
+ crush_bucket_choose -1 x=-444548755 r=3
+  item -2 type 1
+ crush_bucket_choose -2 x=-444548755 r=3
+  item 9 type 0
+CHOOSE got 9
+CHOOSE returns 2
+---finish crush_do_rule---
+
+  numrep: 2, raw_osds: [13,9,]
