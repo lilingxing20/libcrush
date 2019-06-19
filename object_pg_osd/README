@@ -1,0 +1,35 @@
+
+# g++ rados_client.cc test_rados_client.cc -o test_rados_client -lrados --std=c++11 -g -O0 -I. -I /root/ceph/src/include/ -I /root/ceph/src/ -L /root/ceph/src/.libs/ -Wl,-rpath,/root/ceph/src/.libs/
+g++ rados_client.cc test_rados_client.cc \
+    -o test_rados_client \
+    -lrados \
+    --std=c++11 -g -O0 \
+    -I. \
+    -I /root/ceph/src/include/ \
+    -I /root/ceph/src/ \
+    -L ./ \
+    -Wl,-rpath,./
+
+
+# g++ rados_client.cc ceph_osd_crush_rule_dump.cc -o ceph_osd_crush_rule_dump -lcrush -lrados --std=c++11 -g -O0 -I. -I /root/ceph/src/include/ -I /root/ceph/src/ -L/root/ceph/src/.libs/ -Wl,-rpath,/root/ceph/src/.libs/
+g++ rados_client.cc ceph_osd_crush_rule_dump.cc \
+    -o ceph_osd_crush_rule_dump \
+    -lcrush -lrados \
+    --std=c++11 -g -O0 \
+    -I. \
+    -I /root/ceph/src/include/ \
+    -I /root/ceph/src/ \
+    -L ./ \
+    -Wl,-rpath,./
+
+
+# g++ rados_client.cc ceph_osd_map_pool_object.cc -o ceph_osd_map_pool_object -lcrush -lrados --std=c++11 -g -O0 -I ./ -I /root/ceph/src/include/ -I /root/ceph/src/ -L /root/ceph/src/.libs/ -Wl,-rpath,/root/ceph/src/.libs/
+g++ rados_client.cc ceph_osd_map_pool_object.cc \
+    -o ceph_osd_map_pool_object \
+    -lcrush -lrados \
+    --std=c++11 -g -O0 \
+    -I. \
+    -I /root/ceph/src/include/ \
+    -I /root/ceph/src/ \
+    -L ./ \
+    -Wl,-rpath,./
