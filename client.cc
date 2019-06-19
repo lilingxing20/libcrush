@@ -8,13 +8,13 @@ void create_client(librados::Rados& rados,
     std::string user_name,
     uint64_t flags) {
   int ret = rados.init2(user_name.c_str(), cluster_name.c_str(), flags);
-  assert(ret == 0);
+  //assert(ret == 0);
   
   ret = rados.conf_read_file(conf_file.c_str());
-  assert(ret == 0);
+  //assert(ret == 0);
 
   ret = rados.connect();
-  assert(ret == 0);
+  //assert(ret == 0);
 }
 
 /*

@@ -1,8 +1,8 @@
 //
-// g++ crush_tester.cc -o test_crush -lcrush -lrados --std=c++11 -g -O0
+// g++ client.cc  example-crush-tester.cc -o example-crush-tester -lcrush -lrados --std=c++11 -g -O0 -I. -I /root/ceph/src/include/ -L./ -Wl,-rpath,./
 // notice:
-// 1. librados is modified based on ceph0.86
-// 2. libcrush is not official (see https://github.com/xanpeng/libcrush)
+// 1. librados is modified based on ceph hammer
+// 2. libcrush is not official (see https://github.com/xanpeng/libcrush,https://github.com/lilingxing20/libcrush)
 // 3. link libcrush before librados, because librados contains another libcrush codes.
 //
 #include <algorithm>
@@ -11,7 +11,9 @@
 #include <cstdio>
 #include <stdint.h>
 #include <assert.h>
-#include <crush/libcrush.h>
+
+#include "libcrush.h"
+
 using namespace std;
 
 namespace internal {
@@ -140,11 +142,11 @@ void pg_to_up_acting_osds(pg_t pg, vector<int> *up) {
   librados::Rados rados;
   create_client(rados, "/etc/ceph/ceph.conf", "ceph", "client.admin", 0);
   const struct crush_map *crushmap = rados.get_crushmap();
-  assert(crushmap != NULL);
+  //assert(crushmap != NULL);
 
   vector<uint32_t> osd_weight = rados.get_osd_weights();
   // vector<uint32_t> osd_weight {1965,655,655,655,1965,655,655,655};
-  assert(osd_weight.size() > 0);
+  //assert(osd_weight.size() > 0);
   printf("  osd_weight: ");
   for (uint32_t w : osd_weight) printf("%d,", w);
   printf("\n");
@@ -174,7 +176,7 @@ void pg_to_up_acting_osds(pg_t pg, vector<int> *up) {
 }
 
 int main(int argc, char **argv) {
-  assert(argc == 2);
+  //assert(argc == 2);
   string objname = argv[argc-1];
 
   pg_t pg = object_to_pg(object_t(objname), object_locator_t(g_pool_id));

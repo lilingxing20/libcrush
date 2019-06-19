@@ -1,0 +1,142 @@
+diff --git a/src/civetweb b/src/civetweb
+--- a/src/civetweb
++++ b/src/civetweb
+@@ -1 +1 @@
+-Subproject commit 275c42774f1074c9986195cd65b68b70a53130ef
++Subproject commit 275c42774f1074c9986195cd65b68b70a53130ef-dirty
+diff --git a/src/crush/CrushWrapper.h b/src/crush/CrushWrapper.h
+index c76fac3..9db4019 100644
+--- a/src/crush/CrushWrapper.h
++++ b/src/crush/CrushWrapper.h
+@@ -55,9 +55,10 @@ public:
+   std::map<int32_t, string> type_map; /* bucket/device type names */
+   std::map<int32_t, string> name_map; /* bucket/device names */
+   std::map<int32_t, string> rule_name_map;
++  struct crush_map *crush;
+ 
+ private:
+-  struct crush_map *crush;
++//  struct crush_map *crush;
+   /* reverse maps */
+   mutable bool have_rmaps;
+   mutable std::map<string, int> type_rmap, name_rmap, rule_name_rmap;
+diff --git a/src/include/rados/librados.hpp b/src/include/rados/librados.hpp
+index e7ea598..46db3d1 100644
+--- a/src/include/rados/librados.hpp
++++ b/src/include/rados/librados.hpp
+@@ -14,6 +14,10 @@
+ #include "librados.h"
+ #include "rados_types.hpp"
+ 
++extern "C" {
++    #include "crush/crush.h"
++}
++
+ namespace libradosstriper
+ {
+   class RadosStriper;
+@@ -1108,6 +1112,11 @@ namespace librados
+     /// get/wait for the most recent osdmap
+     int wait_for_latest_osdmap();
+ 
++    ///
++    const struct crush_map* get_crushmap();
++    void put_crushmap();
++    std::vector<__u32> get_osd_weights();
++
+     int blacklist_add(const std::string& client_address,
+                       uint32_t expire_seconds);
+ 
+diff --git a/src/librados/RadosClient.h b/src/librados/RadosClient.h
+index d44336f..ef71626 100644
+--- a/src/librados/RadosClient.h
++++ b/src/librados/RadosClient.h
+@@ -58,7 +58,7 @@ private:
+   bool ms_handle_reset(Connection *con);
+   void ms_handle_remote_reset(Connection *con);
+ 
+-  Objecter *objecter;
++//  Objecter *objecter;
+ 
+   Mutex lock;
+   Cond cond;
+@@ -70,7 +70,7 @@ private:
+   void *log_cb_arg;
+   string log_watch;
+ 
+-  int wait_for_osdmap();
++//  int wait_for_osdmap();
+ 
+ public:
+   Finisher finisher;
+@@ -87,6 +87,10 @@ public:
+ 
+   int wait_for_latest_osdmap();
+ 
++  //
++  int wait_for_osdmap();
++  Objecter *objecter;
++
+   int create_ioctx(const char *name, IoCtxImpl **io);
+   int create_ioctx(int64_t, IoCtxImpl **io);
+ 
+diff --git a/src/librados/librados.cc b/src/librados/librados.cc
+index 3959801..ee64ddd 100644
+--- a/src/librados/librados.cc
++++ b/src/librados/librados.cc
+@@ -2137,6 +2137,34 @@ int librados::Rados::wait_for_latest_osdmap()
+   return client->wait_for_latest_osdmap();
+ }
+ 
++//
++const struct crush_map* librados::Rados::get_crushmap()
++{
++  int ret = client->wait_for_osdmap();
++  if (ret < 0)
++    return NULL;
++  return client->objecter->get_osdmap_read()->crush->crush;
++}
++
++void librados::Rados::put_crushmap()
++{
++  client->objecter->put_osdmap_read();
++}
++
++std::vector<__u32> librados::Rados::get_osd_weights()
++{
++  std::vector<__u32> weights;
++  int ret = client->wait_for_osdmap();
++  if (ret < 0)
++    return weights;
++  weights = client->objecter->get_osdmap_read()->osd_weight;
++  client->objecter->put_osdmap_read();
++  return weights;
++}
++//
++
++
++
+ int librados::Rados::blacklist_add(const std::string& client_address,
+ 				   uint32_t expire_seconds)
+ {
+diff --git a/src/osd/OSDMap.h b/src/osd/OSDMap.h
+index 272bd7d..4c163c8 100644
+--- a/src/osd/OSDMap.h
++++ b/src/osd/OSDMap.h
+@@ -225,7 +225,7 @@ private:
+   };
+   ceph::shared_ptr<addrs_s> osd_addrs;
+ 
+-  vector<__u32>   osd_weight;   // 16.16 fixed point, 0x10000 = "in", 0 = "out"
++//  vector<__u32>   osd_weight;   // 16.16 fixed point, 0x10000 = "in", 0 = "out"
+   vector<osd_info_t> osd_info;
+   ceph::shared_ptr< map<pg_t,vector<int32_t> > > pg_temp;  // temp pg mapping (e.g. while we rebuild)
+   ceph::shared_ptr< map<pg_t,int32_t > > primary_temp;  // temp primary mapping (e.g. while we rebuild)
+@@ -257,6 +257,7 @@ private:
+   uint32_t get_crc() const { return crc; }
+ 
+   ceph::shared_ptr<CrushWrapper> crush;       // hierarchical map
++  vector<__u32>   osd_weight;   // 16.16 fixed point, 0x10000 = "in", 0 = "out"
+ 
+   friend class OSDMonitor;
+   friend class PGMonitor;

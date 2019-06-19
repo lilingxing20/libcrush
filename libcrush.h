@@ -3,9 +3,9 @@
 
 #include "client.h"
 extern "C" {
-#include "crush.h"
-#include "hash.h"
-#include "mapper.h"
+#include "crush/crush.h"
+#include "crush/hash.h"
+#include "crush/mapper.h"
 }
 
 #endif

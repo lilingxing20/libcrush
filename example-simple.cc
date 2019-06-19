@@ -1,3 +1,6 @@
+//
+// g++ client.cc  example-simple.cc -o example-simple -lcrush -lrados --std=c++11 -g -O0 -I. -I /root/ceph/src/include/ -L./ -Wl,-rpath,./
+//
 #include <stdio.h>
 #include <stdlib.h>
 #include "libcrush.h"
