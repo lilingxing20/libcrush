@@ -1,5 +1,5 @@
 //
-// g++ client.cc  example-crush-tester.cc -o example-crush-tester -lcrush -lrados --std=c++11 -g -O0 -I. -I /root/ceph/src/include/ -L./ -Wl,-rpath,./
+// g++ client.cc  example-crush-tester.cc -o example-crush-tester -lcrush -lrados --std=c++11 -g -O0 -I. -I /root/ceph/src/include/ -L/root/ceph/src/.libs -Wl,-rpath,/root/ceph/src/.libs
 // notice:
 // 1. librados is modified based on ceph hammer
 // 2. libcrush is not official (see https://github.com/xanpeng/libcrush,https://github.com/lilingxing20/libcrush)

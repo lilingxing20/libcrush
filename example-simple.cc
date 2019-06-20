@@ -1,5 +1,5 @@
 //
-// g++ client.cc  example-simple.cc -o example-simple -lcrush -lrados --std=c++11 -g -O0 -I. -I /root/ceph/src/include/ -L./ -Wl,-rpath,./
+// g++ client.cc  example-simple.cc -o example-simple -lcrush -lrados --std=c++11 -g -O0 -I. -I /root/ceph/src/include/ -L/root/ceph/src/.libs -Wl,-rpath,/root/ceph/src/.libs
 //
 #include <stdio.h>
 #include <stdlib.h>
