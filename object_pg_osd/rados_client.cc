@@ -26,8 +26,8 @@ void create_rados_client(librados::Rados & cluster,
         if (ret < 0) {
             std::cerr << "Couldn't initialize the cluster handle! error " << ret << std::endl;
             ret = EXIT_FAILURE;
-        } else {
-            std::cout << "Created a cluster handle." << std::endl;
+        //} else {
+        //    std::cout << "Created a cluster handle." << std::endl;
         }
     }
 
@@ -37,8 +37,8 @@ void create_rados_client(librados::Rados & cluster,
         if (ret < 0) {
             std::cerr << "Couldn't read the Ceph configuration file! error " << ret << std::endl;
             ret = EXIT_FAILURE;
-        } else {
-            std::cout << "Read the Ceph configuration file." << std::endl;
+        //} else {
+        //    std::cout << "Read the Ceph configuration file." << std::endl;
         }
     }
 
@@ -59,8 +59,8 @@ void create_rados_client(librados::Rados & cluster,
         if (ret < 0) {
             std::cerr << "Couldn't connect to cluster! error " << ret << std::endl;
             ret = EXIT_FAILURE;
-        } else {
-            std::cout << "Connected to the cluster." << std::endl;
+        //} else {
+        //    std::cout << "Connected to the cluster." << std::endl;
         }
     }
 }

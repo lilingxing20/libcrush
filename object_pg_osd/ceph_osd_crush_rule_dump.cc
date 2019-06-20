@@ -12,15 +12,15 @@ void print_rule() {
 
     const struct crush_map* crushmap = rados.get_crushmap();
     // print rules
-    std::cout << "crushmap max rules:"<< crushmap->max_rules << std::endl;
+    printf("crushmap max rules: %d\n", crushmap->max_rules);
     __u32 i;
     for (i = 0; i < crushmap->max_rules; i++) {
         std::cout << "crushmap:"<< crushmap << std::endl;
         std::cout << "rule:"<< crushmap->rules[i] << std::endl;
-        std::cout << "rule mask set:"<< crushmap->rules[i]->mask.ruleset << std::endl;
-        std::cout << "rule mask type:"<< crushmap->rules[i]->mask.type << std::endl;
-        std::cout << "rule mask min size:"<< crushmap->rules[i]->mask.min_size << std::endl;
-        std::cout << "rule mask max size:"<< crushmap->rules[i]->mask.max_size << std::endl;
+        printf("rule mask ruleset: %d\n", crushmap->rules[i]->mask.ruleset);
+        printf("rule mask type: %d\n", crushmap->rules[i]->mask.type);
+        printf("rule mask min size: %d\n", crushmap->rules[i]->mask.min_size);
+        printf("rule mask max size: %d\n", crushmap->rules[i]->mask.max_size);
     }
     // function signature:
     // int crush_find_rule(const struct crush_map *map, int ruleset, int type, int size)

@@ -89,13 +89,6 @@ int crush_stable_mod(int x, int b, int bmask) {
 }
 } // namespace internal
 
-int g_pgp_num = 128, g_pgp_num_mask = 127;
-int g_pg_num = 128, g_pg_num_mask = 127;
-int g_pool_id = 1, g_pool_type = 1; 
-string g_pool = "rbd";
-int g_replicas = 3;
-int g_crush_ruleset = 0;
-
 typedef uint32_t ps_t; // placement seed
 
 struct pg_t {
@@ -126,13 +119,16 @@ pg_t object_to_pg(object_t oid, object_locator_t loc) {
 }
 
 // step 2:
-pg_t raw_pg_to_pg(pg_t pg) {
+pg_t raw_pg_to_pg(pg_t pg, int g_pg_num, int g_pg_num_mask) {
   pg.seed = internal::crush_stable_mod(pg.seed, g_pg_num, g_pg_num_mask);
   return pg;
 }
 
 // step 3: 将pg映射到osd
-void pg_to_up_acting_osds(pg_t pg, vector<int> *up) {
+void pg_to_up_acting_osds(pg_t pg, vector<int> *up,
+        int g_pool_id, int g_pool_type,
+        int g_pgp_num, int g_pgp_num_mask,
+        int g_replicas, int g_crush_ruleset) {
   librados::Rados rados;
   create_rados_client(rados, "/etc/ceph/ceph.conf", "ceph", "client.admin", 0);
   const struct crush_map *crushmap = rados.get_crushmap();
@@ -154,9 +150,9 @@ void pg_to_up_acting_osds(pg_t pg, vector<int> *up) {
   printf("  placement_ps: %d\n", placement_ps);
 
   int rawout[g_replicas], scratch[g_replicas * 3];
-  printf("\n---start crush_do_rule---\n");
+  //printf("\n---start crush_do_rule---\n");
   int numrep = crush_do_rule(crushmap, ruleno, placement_ps, rawout, g_replicas, &osd_weight[0], osd_weight.size(), scratch);
-  printf("---finish crush_do_rule---\n\n");
+  //printf("---finish crush_do_rule---\n\n");
   up->resize(numrep);
   for (int i = 0; i < numrep; ++i)
     up->at(i) = rawout[i];
@@ -170,16 +166,51 @@ void pg_to_up_acting_osds(pg_t pg, vector<int> *up) {
 }
 
 int main(int argc, char **argv) {
-  //assert(argc == 2);
-  string objname = argv[argc-1];
 
-  pg_t pg = object_to_pg(object_t(objname), object_locator_t(g_pool_id));
-  printf("objectr_to_pg: %s -> %x\n", objname.c_str(), pg.seed);
+  // int g_pgp_num = 128, g_pgp_num_mask = 127;
+  // int g_pg_num = 128, g_pg_num_mask = 127;
+  // int g_pool_id = 1, g_pool_type = 1; 
+  // int g_replicas = 3;
+  // int g_crush_ruleset = 0;
 
-  pg_t mpg = raw_pg_to_pg(pg);
-  printf("raw_pg_to_pg: %x\n", mpg.seed);
+  if (argc == 4) {
+    string objname_1 = argv[1];
+    int pool_id_1 = atoi(argv[2]);
+    int pg_num_1 = atoi(argv[3]);
+    int pg_num_mask_1 = pg_num_1 - 1;
+    pg_t pg_1 = object_to_pg(object_t(objname_1), object_locator_t(pool_id_1));
+    printf("objectr_to_pg: %s -> %x\n", objname_1.c_str(), pg_1.seed);
 
-  printf("pg_to_osds:\n");
-  vector<int> up;
-  pg_to_up_acting_osds(mpg, &up);
+    pg_t mpg_1 = raw_pg_to_pg(pg_1, pg_num_1, pg_num_mask_1);
+    printf("raw_pg_to_pg: %x\n", mpg_1.seed);
+    printf("pgid: %x.%x\n", pool_id_1, mpg_1.seed);
+
+  } else if (argc == 5) {
+    string objname = argv[1];
+    int g_pool_id = atoi(argv[2]);
+    int g_pool_type = 1; 
+    int g_pg_num = atoi(argv[3]);
+    int g_pg_num_mask = g_pg_num - 1;
+    int g_pgp_num = atoi(argv[4]);
+    int g_pgp_num_mask = g_pgp_num - 1;
+    int g_replicas = 3;
+    int g_crush_ruleset = 0;
+
+    pg_t pg = object_to_pg(object_t(objname), object_locator_t(g_pool_id));
+    printf("objectr_to_pg: %s -> %x\n", objname.c_str(), pg.seed);
+
+    pg_t mpg = raw_pg_to_pg(pg, g_pg_num, g_pg_num_mask);
+    printf("raw_pg_to_pg: %x\n", mpg.seed);
+    printf("pgid: %x.%x\n", g_pool_id, mpg.seed);
+
+    printf("pg_to_osds:\n");
+    vector<int> up;
+    pg_to_up_acting_osds(mpg, &up, g_pool_id, g_pool_type, g_pgp_num, g_pgp_num_mask, g_replicas, g_crush_ruleset);
+
+  } else {
+    printf("Parameter:\n");
+    printf("%s <object_name> <pool_id> <pg_num>\n", argv[0]);
+    printf("%s <object_name> <pool_id> <pg_num> <pgp_num>\n", argv[0]);
+  }
+  return 0;
 }
